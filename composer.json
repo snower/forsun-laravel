@@ -1,0 +1,34 @@
+{
+    "name": "snower/forsun-laravel",
+    "description": "高性能定时服务",
+    "keywords": ["forsun", "laravel", "sdk"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "snower",
+            "email": "snower199@gmail.com"
+        }
+    ],
+    "require": {
+        "leric/php-thrift": "0.9.*"
+    },
+    "require-dev": {
+        "laravel/framework": "5.4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Snower\\LaravelForsun\\": "src/"
+        }
+    },
+    "minimum-stability" : "dev",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Snower\\LaravelForsun\\ServiceProvider"
+            ],
+            "aliases": {
+                "Forsun": "Snower\\LaravelForsun\\Facade"
+            }
+        }
+    }
+}
