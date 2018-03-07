@@ -15,6 +15,8 @@ trait ManagesFrequencies
         $this->week  = $week;
         $this->is_timeout = false;
         $this->timeout_count = 0;
+
+        $this->timed = true;
         return $this->schedule();
     }
 
@@ -27,6 +29,8 @@ trait ManagesFrequencies
         $this->week  = $week;
         $this->is_timeout = true;
         $this->timeout_count = $count;
+
+        $this->timed = true;
         return $this->schedule();
     }
 

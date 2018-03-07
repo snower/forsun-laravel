@@ -71,29 +71,29 @@ class Forsun
 
     public function create($key, $second, $minute, $hour, $day, $month, $week, $action, array $params){
         $forsun_pan = $this->getClient()->create($key, $second, $minute, $hour, $day, $month, $week, $action, $params);
-        return new Plan($forsun_pan);
+        return new Plan($this, $forsun_pan);
     }
 
     public function createTimeout($key, $second, $minute, $hour, $day, $month, $week, $count, $action, array $params){
         $forsun_pan = $this->getClient()->createTimeout($key, $second, $minute, $hour, $day, $month, $week, $count, $action, $params);
-        return new Plan($forsun_pan);
+        return new Plan($this, $forsun_pan);
     }
 
     public function remove($key){
         $forsun_pan = $this->getClient()->remove($key);
-        return new Plan($forsun_pan, true);
+        return new Plan($this, $forsun_pan, true);
     }
 
     public function get($key){
         $forsun_pan = $this->getClient()->get($key);
-        return new Plan($forsun_pan);
+        return new Plan($this, $forsun_pan);
     }
 
     public function getCurrent(){
         $forsun_pans = $this->getClient()->getCurrent();
         $plans = [];
         foreach ($forsun_pans as $forsun_pan){
-            $plans[] = new Plan($forsun_pan);
+            $plans[] = new Plan($this, $forsun_pan);
         }
         return $plans;
     }
@@ -102,7 +102,7 @@ class Forsun
         $forsun_pans = $this->getClient()->getTime($timestamp);
         $plans = [];
         foreach ($forsun_pans as $forsun_pan){
-            $plans[] = new Plan($forsun_pan);
+            $plans[] = new Plan($this, $forsun_pan);
         }
         return $plans;
     }
