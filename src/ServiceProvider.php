@@ -11,6 +11,8 @@ namespace Snower\LaravelForsun;
 use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Laravel\Lumen\Application as LumenApplication;
+use Snower\LaravelForsun\Commands\ScheduleRegisterCommand;
+use Snower\LaravelForsun\Commands\ScheduleUnregisterCommand;
 
 class ServiceProvider extends LaravelServiceProvider
 {
@@ -59,6 +61,11 @@ class ServiceProvider extends LaravelServiceProvider
         });
 
         $this->app->alias(Forsun::class, 'forsun');
+
+        $this->commands([
+            ScheduleRegisterCommand::class,
+            ScheduleUnregisterCommand::class,
+        ]);
     }
 
     /**
