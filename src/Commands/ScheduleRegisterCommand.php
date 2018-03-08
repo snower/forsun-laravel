@@ -19,8 +19,8 @@ class ScheduleRegisterCommand extends Command
 
     public function handle(){
         $forsun = Container::getInstance()->make('forsun');
-        $name = config('forsun.prefix') . ':schedule:run';
-        $plan = $forsun->plan($name)->everyMinute()->job(new ScheduleRunHandler());
+        $name = ':schedule:run';
+        $forsun->plan($name)->everyMinute()->job(new ScheduleRunHandler());
         $this->info("success");
     }
 }

@@ -60,14 +60,14 @@ class Builder
         $database_config = config("database");
         $queue_config = config("queue");
 
-        if($queue_config["default"] !== 'redis' || $queue_config["default"] !== 'database' || $queue_config["default"] !== 'beanstalkd'){
+        if($queue_config["default"] !== 'redis' && $queue_config["default"] !== 'database' && $queue_config["default"] !== 'beanstalkd'){
             throw new UnsupportedQueueException();
         }
 
-        if($queue_config["default"] !== 'database'){
+        if($queue_config["default"] === 'database'){
             $this->action = 'mysql';
 
-            $connection = Arr::get(Arr::get($queue_config, 'database', []), 'connection', Arr::get($database_config, 'default', 'default'));
+            $connection = Arr::get(Arr::get($queue_config["connections"], 'database', []), 'connection', Arr::get($database_config, 'default', 'default'));
             $database_config = Arr::get($database_config['connections'], $connection, []);
             $this->params = [
                 'host' => Arr::get($database_config, 'host', '127.0.0.1'),
@@ -75,29 +75,29 @@ class Builder
                 'db' => Arr::get($database_config, 'database', 'mysql'),
                 'user' => Arr::get($database_config, 'user', 'root'),
                 'passwd' => Arr::get($database_config, 'password', ''),
-                'table' => Arr::get($queue_config["database"], 'table', 'jobs'),
+                'table' => Arr::get($queue_config["connections"]["database"], 'table', 'jobs'),
             ];
-            $this->queue_name = Arr::get($queue_config["database"], 'queue', 'default');
-        }else if($queue_config["default"] !== 'beanstalkd'){
+            $this->queue_name = Arr::get($queue_config["connections"]["database"], 'queue', 'default');
+        }else if($queue_config["default"] === 'beanstalkd'){
             $this->action = 'beanstalk';
 
             $this->params = [
-                'host' => Arr::get($queue_config["beanstalkd"], 'host', '127.0.0.1'),
-                'port' => strval(Arr::get($queue_config["beanstalkd"], 'port', 11300)),
-                'name' => Arr::get($queue_config["beanstalkd"], 'queue', 'default'),
+                'host' => Arr::get($queue_config["connections"]["beanstalkd"], 'host', '127.0.0.1'),
+                'port' => strval(Arr::get($queue_config["connections"]["beanstalkd"], 'port', 11300)),
+                'name' => Arr::get($queue_config["connections"]["beanstalkd"], 'queue', 'default'),
             ];
-            $this->queue_name = Arr::get($queue_config["beanstalkd"], 'queue', 'default');
+            $this->queue_name = Arr::get($queue_config["connections"]["beanstalkd"], 'queue', 'default');
         }else{
             $this->action = 'redis';
 
-            $connection = Arr::get(Arr::get($queue_config, 'redis', []), 'connection', Arr::get($database_config, 'default', 'default'));
+            $connection = Arr::get(Arr::get($queue_config["connections"], 'redis', []), 'connection', Arr::get($database_config, 'default', 'default'));
             $database_config = Arr::get($database_config['redis'], $connection, []);
             $this->params = [
                 'host' => Arr::get($database_config, 'host', '127.0.0.1'),
                 'port' => strval(Arr::get($database_config, 'port', 6379)),
                 'selected_db' => strval(Arr::get($database_config, 'database', 0)),
             ];
-            $this->queue_name = Arr::get($queue_config["redis"], 'queue', 'default');
+            $this->queue_name = Arr::get($queue_config["connections"]["redis"], 'queue', 'default');
         }
     }
 
@@ -183,25 +183,27 @@ class Builder
     }
 
     protected function createPayload($class, $method, $data){
-        $data = addslashes(json_encode([
+        $data = json_encode([
             "job" => "Illuminate\\Events\\CallQueuedHandler@call",
             "data" => [
                 "class" => $class,
                 "method" => $method,
                 "data" => serialize($data),
             ]
-        ]));
+        ]);
 
-        if($this->action == 'database') {
+        if($this->action === 'mysql') {
             $now = Carbon::now()->getTimestamp();
             $table = $this->params["table"];
-            $this->params['sql'] = "INSERT INTO `{$table}` (`queue`,`payload`,`attempts`,`reserved`,`reserved_at`,`available_at`,`created_at`) VALUES ('{$this->queue_name}','{$data}',0,NULL,0,{$now},{$now})";
+            $data = addslashes($data);
+            $this->params['sql'] = "INSERT INTO `{$table}` (`queue`,`payload`,`attempts`,`reserved`,`reserved_at`,`available_at`,`created_at`) VALUES ('{$this->queue_name}','{$data}',0,0,0,{$now},{$now})";
         }
-        if($this->action == 'beanstalkd') {
+        else if($this->action === 'beanstalk') {
             $this->params['body'] = $data;
         }
         else{
-            $this->params['command'] = "RPUSH '{$this->queue_name}' '{$data}'";
+            $data = addslashes($data);
+            $this->params['command'] = "RPUSH 'queues:{$this->queue_name}' '{$data}'";
         }
 
         $this->paramsed = true;
