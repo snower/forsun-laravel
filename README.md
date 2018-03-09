@@ -81,6 +81,12 @@ Forsun::plan()->exec('node /home/forge/script.js')->daily();
 Forsun::plan()->fire('testevent', [])->everyMinute();
 ```
 
+* Http事件调度
+
+```
+Forsun::plan()->http('http://www.baidu.com')->everyMinute();
+```
+
 注意：
 
 * 每个任务只能设置一次调度频率。
