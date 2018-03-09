@@ -12,7 +12,7 @@
 
 * 轻松支持千万级定时任务调度。
 * 定时任务触发推送到Queue，轻松支持跨机器和共性能分布式。
-* 支持任务到期触发command、Job、Shell和Event。
+* 支持任务到期触发command、Job、Shell、Http和Event。
 * 支持驱动原生Laravel Schedule运行。
 * 支持创建延时任务和定时到期任务，和原生Laravel Schedule保持相同接口，轻松使用。
 
