@@ -49,7 +49,6 @@ class Builder
         }else{
             $this->name = config('forsun.prefix') . $this->name;
         }
-        $this->initAction();
     }
 
     protected function genName(){
@@ -129,6 +128,7 @@ class Builder
     {
         $job = is_string($job) ? resolve($job) : clone $job;
 
+        $this->initAction();
         $this->createPayload(JobDispatchHandler::class, 'handle', [
             $job
         ]);
@@ -148,6 +148,7 @@ class Builder
             $command .= ' '.$this->compileParameters($parameters);
         }
 
+        $this->initAction();
         $this->createPayload(CommandRunHandler::class, 'handle', [
             $command
         ]);
@@ -155,9 +156,32 @@ class Builder
     }
 
     public function fire($event, $payload = [], $halt = false){
+        $this->initAction();
         $this->createPayload(EventFireHandler::class, 'handle', [
             $event, $payload, $halt
         ]);
+        return $this->schedule();
+    }
+
+    public function http($url, $method = "GET", $body = '', $headers = [], $options = []){
+        $this->action = "http";
+        $this->params = [
+            'url' => $url,
+            'method' => $method,
+            'body' => $body,
+        ];
+
+        foreach ($headers as $key => $value){
+            $this->params['header_' . $key] = $value;
+        }
+
+        $option_keys = ['auth_username', 'auth_password', 'auth_mode', 'user_agent', 'connect_timeout', 'request_timeout'];
+        foreach ($option_keys as $key){
+            if(isset($options[$key])){
+                $this->params[$key] = $options[$key];
+            }
+        }
+        $this->paramsed = true;
         return $this->schedule();
     }
 
