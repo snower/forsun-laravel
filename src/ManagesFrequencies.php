@@ -88,6 +88,8 @@ trait ManagesFrequencies
             $time = Carbon::createFromTimestamp($time);
         }
 
+        $time->setTimezone("UTC");
+
         return $this->createPlan($time->second, $time->minute, $time->hour, $time->day, $time->month);
     }
 
