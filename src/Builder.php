@@ -96,6 +96,11 @@ class Builder
                 'port' => strval(Arr::get($database_config, 'port', 6379)),
                 'selected_db' => strval(Arr::get($database_config, 'database', 0)),
             ];
+
+            $password = strval(Arr::get($database_config, 'password', null));
+            if($password !== '' && $password !== null){
+                $this->params['password'] = $password;
+            }
             $this->queue_name = Arr::get($queue_config["connections"]["redis"], 'queue', 'default');
         }
     }
