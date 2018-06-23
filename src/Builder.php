@@ -225,7 +225,7 @@ class Builder
         if($this->action === 'mysql') {
             $now = Carbon::now()->getTimestamp();
             $table = $this->params["table"];
-            $data = addcslashes($data, '\'"');
+            $data = addslashes($data);
             $this->params['sql'] = "INSERT INTO `{$table}` (`queue`,`payload`,`attempts`,`reserved`,`reserved_at`,`available_at`,`created_at`) VALUES ('{$this->queue_name}','{$data}',0,0,0,{$now},{$now})";
         }
         else if($this->action === 'beanstalk') {
