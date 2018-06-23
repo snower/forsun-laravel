@@ -214,6 +214,7 @@ class Builder
     protected function createPayload($class, $method, $data){
         $data = json_encode([
             "job" => "Illuminate\\Events\\CallQueuedHandler@call",
+            "attempts" => 0,
             "data" => [
                 "class" => $class,
                 "method" => $method,
@@ -224,14 +225,14 @@ class Builder
         if($this->action === 'mysql') {
             $now = Carbon::now()->getTimestamp();
             $table = $this->params["table"];
-            $data = addslashes($data);
+            $data = addcslashes($data, '\'"');
             $this->params['sql'] = "INSERT INTO `{$table}` (`queue`,`payload`,`attempts`,`reserved`,`reserved_at`,`available_at`,`created_at`) VALUES ('{$this->queue_name}','{$data}',0,0,0,{$now},{$now})";
         }
         else if($this->action === 'beanstalk') {
             $this->params['body'] = $data;
         }
         else{
-            $data = addslashes($data);
+            $data = addcslashes($data, '\'');
             $this->params['command'] = "RPUSH 'queues:{$this->queue_name}' '{$data}'";
         }
 
