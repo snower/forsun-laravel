@@ -13,7 +13,7 @@
         "leric/php-thrift": "0.9.*"
     },
     "require-dev": {
-        "laravel/framework": "5.4.*"
+        "laravel/framework": ">=5.4"
     },
     "autoload": {
         "psr-4": {

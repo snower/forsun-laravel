@@ -10,6 +10,7 @@ namespace Snower\LaravelForsun;
 
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Console\Application;
 use Illuminate\Container\Container;
 use Symfony\Component\Process\ProcessUtils;
@@ -131,12 +132,8 @@ class Builder
      */
     public function job($job)
     {
-        $job = is_string($job) ? resolve($job) : clone $job;
-
         $this->initAction();
-        $this->createPayload(JobDispatchHandler::class, 'handle', [
-            $job
-        ]);
+        $this->createPayload(new JobDispatchHandler($job));
         return $this->schedule();
     }
 
@@ -149,22 +146,18 @@ class Builder
      */
     public function exec($command, array $parameters = [])
     {
+        $this->initAction();
         if (count($parameters)) {
             $command .= ' '.$this->compileParameters($parameters);
         }
 
-        $this->initAction();
-        $this->createPayload(CommandRunHandler::class, 'handle', [
-            $command
-        ]);
+        $this->createPayload(new CommandRunHandler($command));
         return $this->schedule();
     }
 
     public function fire($event, $payload = [], $halt = false){
         $this->initAction();
-        $this->createPayload(EventFireHandler::class, 'handle', [
-            $event, $payload, $halt
-        ]);
+        $this->createPayload(new EventFireHandler($event, $payload, $halt));
         return $this->schedule();
     }
 
@@ -190,12 +183,6 @@ class Builder
         return $this->schedule();
     }
 
-    /**
-     * Compile parameters for a command.
-     *
-     * @param  array  $parameters
-     * @return string
-     */
     protected function compileParameters(array $parameters)
     {
         return collect($parameters)->map(function ($value, $key) {
@@ -211,16 +198,23 @@ class Builder
         })->implode(' ');
     }
 
-    protected function createPayload($class, $method, $data){
-        $data = json_encode([
-            "job" => "Illuminate\\Events\\CallQueuedHandler@call",
-            "attempts" => 0,
+    protected function createPayload($command){
+        $data = [
+            "job" => "Illuminate\\Queue\\CallQueuedHandler@call",
+            'displayName' => "Illuminate\\Queue\\CallQueuedHandler",
+            'maxTries' => null,
+            'timeout' => null,
             "data" => [
-                "class" => $class,
-                "method" => $method,
-                "data" => serialize($data),
+                "commandName" => get_class($command),
+                "command" => serialize($command)
             ]
-        ]);
+        ];
+
+        if($this->action == 'redis') {
+            $data['id'] = Str::random(32);
+            $data['attempts'] = 0;
+        }
+        $data = json_encode($data);
 
         if($this->action === 'mysql') {
             $now = Carbon::now()->getTimestamp();

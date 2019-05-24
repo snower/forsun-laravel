@@ -12,7 +12,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 
 class JobDispatchHandler implements ShouldQueue
 {
-    public function handle($job){
-        dispatch(is_string($job) ? resolve($job) : $job);
+    public $job;
+
+    public function __construct($job)
+    {
+        $this->job = $job;
+    }
+
+    public function handle(){
+        dispatch(is_string($this->job) ? resolve($this->job) : $this->job);
     }
 }

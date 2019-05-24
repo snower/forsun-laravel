@@ -12,23 +12,30 @@ use Illuminate\Container\Container;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Mutex;
-use Illuminate\Console\Scheduling\CacheMutex;
 
 class CommandRunHandler implements ShouldQueue
 {
-    protected $mutex;
+    public $command;
 
-    public function __construct()
+    public function __construct($command)
     {
-        $container = Container::getInstance();
-
-        $this->mutex = $container->bound(Mutex::class)
-            ? $container->make(Mutex::class)
-            : $container->make(CacheMutex::class);
+        $this->command = $command;
     }
 
-    public function handle($command){
-        $event = new Event($this->mutex, $command);
-        $event->run(Container::getInstance());
+    public function handle(){
+        $laravel = Container::getInstance();
+
+        if(class_exists('Illuminate\Console\Scheduling\CacheMutex')){
+            $cachemutex_class = 'Illuminate\Console\Scheduling\CacheMutex';
+        } else {
+            $cachemutex_class = 'Illuminate\Console\Scheduling\CacheEventMutex';
+        }
+
+        $mutex = $laravel->bound(Mutex::class)
+            ? $laravel->make(Mutex::class)
+            : $laravel->make($cachemutex_class);
+
+        $event = new Event($mutex, $this->command);
+        $event->run($laravel);
     }
 }
